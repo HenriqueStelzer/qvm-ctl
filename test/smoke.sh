@@ -1,4 +1,4 @@
-m#!/usr/bin/env bash
+!/usr/bin/env bash
 # Smoke tests for qvm-ctl
 # Runs without KVM/QEMU runtime — tests CLI logic only
 
@@ -15,7 +15,7 @@ PASS=0 FAIL=0
 check(){
     local desc="$1"; shift
     if "$@" >/dev/null 2>&1; then
-        echo "  ✓ $desc"m
+        echo "  ✓ $desc"
         ((PASS++))
     else
         echo "  ✗ $desc"
