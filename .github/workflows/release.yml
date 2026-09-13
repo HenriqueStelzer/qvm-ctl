@@ -12,9 +12,13 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+
+      - name: Build release binary
+        run: cargo build --release
 
       - name: Create release
         uses: softprops/action-gh-release@v2
         with:
-          files: src/qvm-ctl.sh
+          files: target/release/qvm
           generate_release_notes: true

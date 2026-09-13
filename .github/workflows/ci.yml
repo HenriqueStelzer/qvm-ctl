@@ -7,24 +7,22 @@ on:
     branches: [main]
 
 jobs:
-  shellcheck:
+  check:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - name: ShellCheck
-        uses: ludeeus/action-shellcheck@2.0.0
+      - uses: dtolnay/rust-toolchain@stable
         with:
-          scandir: .
-          severity: warning
+          components: clippy, rustfmt
+      - run: cargo fmt --check
+      - run: cargo clippy -- -D warnings
+      - run: cargo test
 
-  smoke-test:
+  system-test:
     runs-on: ubuntu-latest
     container: archlinux:latest
     steps:
       - uses: actions/checkout@v4
-
-      - name: Install dependencies
-        run: pacman -Syu --noconfirm qemu-system-x86 qemu-img edk2-ovmf swtpm
-
-      - name: Run smoke tests
-        run: bash test/smoke.sh
+      - run: pacman -Syu --noconfirm rust qemu-system-x86 qemu-img edk2-ovmf swtpm procps-ng
+      - run: cargo build --release
+      - run: cargo test
