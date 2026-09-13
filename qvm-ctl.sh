@@ -627,7 +627,7 @@ cmd_help(){
     echo -e "    QVM_DIR   VM storage directory  (default: ~/vms)"
     echo -e "    QVM_RAM   RAM in MB             (default: 8192)"
     echo -e "    QVM_CPUS  vCPU count            (default: 4)"
-    echo -e "    QVM_DISK  Disk size             (default: 120G)"
+    echo -e "    QVM_DISK  Disk size             (default: 40G)"
 
     sep
 }

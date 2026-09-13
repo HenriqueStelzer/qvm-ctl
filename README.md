@@ -6,15 +6,16 @@ QEMU/KVM wrapper. Repeatable VM lifecycles without libvirt.
 
 - qemu (`qemu-system-x86_64`, `qemu-img`)
 - OVMF/edk2 (UEFI firmware)
+- swtpm (TPM 2.0 emulation)
 - bash ≥ 4
 - SPICE viewer (`remote-viewer` or `virt-viewer`) — optional, for display
 
-Arch: `sudo pacman -S qemu-full edk2-ovmf virt-viewer`  
-Debian/Ubuntu: `sudo apt install qemu-system-x86 qemu-utils ovmf virt-viewer`
+Arch: `sudo pacman -S qemu-full edk2-ovmf swtpm virt-viewer`  
+Debian/Ubuntu: `sudo apt install qemu-system-x86 qemu-utils ovmf swtpm virt-viewer`
 
 ## Install
 
-    git clone https://github.com/youruser/qvm-ctl.git
+    git clone https://github.com/HenriqueStelzer/qvm-ctl.git
     cd qvm-ctl
     sudo install -m755 qvm-ctl.sh /usr/local/bin/qvm
 
