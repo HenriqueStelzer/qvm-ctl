@@ -55,6 +55,16 @@ check "--help exits 0"            bash "$QVM" --help
 check "-h exits 0"                bash "$QVM" -h
 check "version exits 0"           bash "$QVM" version
 check_output "version shows 1.1.0" "1.1.0" bash "$QVM" version
+check_output "--version works"    "1.1.0" bash "$QVM" --version
+
+# NO_COLOR support: piped output should not contain ANSI escape codes
+if bash "$QVM" list 2>&1 | grep -qP '\033\['; then
+    echo "  ✗ piped output strips ANSI codes"
+    ((FAIL++))
+else
+    echo "  ✓ piped output strips ANSI codes"
+    ((PASS++))
+fi
 
 # --- create ---
 echo ""

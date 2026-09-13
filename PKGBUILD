@@ -1,18 +1,31 @@
-# Maintainer: Henrique Stelzer <your-email@example.com>
+# Maintainer: Henrique Stelzer <your-email at domain dot tld>
 pkgname=qvm-ctl
 pkgver=1.1.0
 pkgrel=1
-pkgdesc='QEMU/KVM VM lifecycle manager — create, launch, stop VMs without libvirt'
+pkgdesc='QEMU/KVM VM lifecycle manager without libvirt'
 arch=('any')
 url='https://github.com/HenriqueStelzer/qvm-ctl'
 license=('MIT')
-depends=('qemu-system-x86' 'edk2-ovmf' 'bash' 'swtpm' 'iproute2')
+depends=(
+    'qemu-system-x86'
+    'edk2-ovmf'
+    'swtpm'
+    'iproute2'
+    'procps-ng'
+)
 optdepends=('virt-viewer: SPICE display connection')
-source=("$pkgname-$pkgver.tar.gz::https://github.com/HenriqueStelzer/qvm-ctl/archive/refs/tags/v$pkgver.tar.gz")
-sha256sums=('SKIP')
+provides=('qvm')
+source=("$pkgname-$pkgver.tar.gz::$url/archive/refs/tags/v$pkgver.tar.gz")
+b2sums=('SKIP')
+
+check() {
+    cd "$pkgname-$pkgver"
+    bash test/smoke.sh
+}
 
 package() {
-    install -Dm755 "$srcdir/$pkgname-$pkgver/qvm-ctl.sh" "$pkgdir/usr/bin/qvm"
-    install -Dm644 "$srcdir/$pkgname-$pkgver/LICENSE" "$pkgdir/usr/share/licenses/$pkgname/LICENSE"
-    install -Dm644 "$srcdir/$pkgname-$pkgver/README.md" "$pkgdir/usr/share/doc/$pkgname/README.md"
+    cd "$pkgname-$pkgver"
+    install -Dm755 qvm-ctl.sh "$pkgdir/usr/bin/qvm"
+    install -Dm644 LICENSE "$pkgdir/usr/share/licenses/$pkgname/LICENSE"
+    install -Dm644 README.md "$pkgdir/usr/share/doc/$pkgname/README.md"
 }

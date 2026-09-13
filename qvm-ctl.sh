@@ -10,12 +10,16 @@ VCPUS_DEFAULT="${QVM_CPUS:-4}"
 DISK_SIZE_DEFAULT="${QVM_DISK:-40G}"
 SPICE_PORT_START=5900
 
-R='\033[0;31m'
-G='\033[0;32m'
-Y='\033[1;33m'
-C='\033[0;36m'
-B='\033[1m'
-Z='\033[0m'
+if [[ -t 1 ]] && [[ -z "${NO_COLOR:-}" ]]; then
+    R='\033[0;31m'
+    G='\033[0;32m'
+    Y='\033[1;33m'
+    C='\033[0;36m'
+    B='\033[1m'
+    Z='\033[0m'
+else
+    R='' G='' Y='' C='' B='' Z=''
+fi
 
 info(){ echo -e "${C}→${Z} $*"; }
 ok(){   echo -e "${G}✓${Z} $*"; }
@@ -371,7 +375,11 @@ cmd_launch(){
     require qemu-system-x86_64
     require ss
 
-    find_ovmf
+    [[ -f "$OVMF_CODE" ]] ||
+        die "OVMF_CODE not found at $OVMF_CODE (stored in vm.conf)"
+
+    [[ -f "$OVMF_VARS" ]] ||
+        die "OVMF_VARS not found at $OVMF_VARS (stored in vm.conf)"
 
     local port
     port=$(next_spice_port)
@@ -382,6 +390,9 @@ cmd_launch(){
     log=$(vm_log_file "$name")
 
     start_tpm "$name"
+
+    # Clean up swtpm if launch is interrupted or fails
+    trap 'stop_tpm "$name"' ERR INT TERM
 
     local tpm_socket
     tpm_socket=$(vm_tpm_socket "$name")
@@ -406,7 +417,7 @@ cmd_launch(){
 
         # Graphics
         -device "virtio-gpu-pci"
-        -spice "port=$port,disable-ticketing=on"
+        -spice "addr=127.0.0.1,port=$port,disable-ticketing=on"
 
         # SPICE agent
         -device "virtio-serial-pci"
@@ -456,6 +467,9 @@ cmd_launch(){
     info "Starting TPM 2.0..."
 
     "${cmd[@]}" >"$log" 2>&1 &
+
+    # Disarm the swtpm cleanup trap now that QEMU owns the process
+    trap - ERR INT TERM
 
     local pid=$!
 
@@ -578,15 +592,15 @@ cmd_disable(){
     [[ -d "$vmdir" ]] ||
         die "VM '$name' not found"
 
-    if vm_is_running "$name"; then
-        warn "Stopping running VM..."
-        cmd_stop "$name"
-    fi
-
     read -rp "Type '$name' to confirm deletion: " confirm
 
     [[ "$confirm" == "$name" ]] ||
         die "Aborted"
+
+    if vm_is_running "$name"; then
+        warn "Stopping running VM..."
+        cmd_stop "$name"
+    fi
 
     rm -rf "$vmdir"
 
@@ -659,6 +673,10 @@ case "${1:-}" in
 
     help|--help|-h)
         cmd_help
+        ;;
+
+    --version)
+        cmd_version
         ;;
 
     *)

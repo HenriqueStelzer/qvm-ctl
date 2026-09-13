@@ -19,11 +19,12 @@ jobs:
 
   smoke-test:
     runs-on: ubuntu-latest
+    container: archlinux:latest
     steps:
       - uses: actions/checkout@v4
 
       - name: Install dependencies
-        run: sudo apt-get update && sudo apt-get install -y qemu-system-x86 qemu-utils ovmf
+        run: pacman -Syu --noconfirm qemu-system-x86 qemu-img edk2-ovmf swtpm
 
       - name: Run smoke tests
         run: bash test/smoke.sh
