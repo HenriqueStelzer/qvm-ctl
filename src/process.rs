@@ -40,3 +40,42 @@ pub fn check_process_comm(pid: i32, expected: &str) -> bool {
 pub fn send_signal(pid: i32, sig: Signal) -> bool {
     kill(Pid::from_raw(pid), sig).is_ok()
 }
+
+pub fn which(name: &str) -> Option<std::path::PathBuf> {
+    let name_path = Path::new(name);
+    if name_path.components().count() > 1 {
+        if is_executable(name_path) {
+            return Some(name_path.to_path_buf());
+        }
+        return None;
+    }
+
+    let paths = std::env::var_os("PATH")?;
+    for dir in std::env::split_paths(&paths) {
+        let candidate = dir.join(name);
+        if is_executable(&candidate) {
+            return Some(candidate);
+        }
+    }
+    None
+}
+
+fn is_executable(path: &Path) -> bool {
+    use std::os::unix::fs::PermissionsExt;
+    if let Ok(meta) = path.metadata() {
+        meta.is_file() && (meta.permissions().mode() & 0o111 != 0)
+    } else {
+        false
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_which_lookup() {
+        assert!(which("cargo").is_some());
+        assert!(which("definitely_nonexistent_binary_xyz_12345").is_none());
+    }
+}

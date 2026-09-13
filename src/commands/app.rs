@@ -32,11 +32,11 @@ pub fn run(base: &Path, name: String, app_cmd: String, args: Vec<String>) -> Res
         .map_err(|_| QvmError::RdpPortNotFound(name.clone()))?;
 
     let is_wayland = std::env::var_os("WAYLAND_DISPLAY").is_some();
-    let rdp_client = if is_wayland && which("wlfreerdp") {
+    let rdp_client = if is_wayland && crate::process::which("wlfreerdp").is_some() {
         "wlfreerdp"
-    } else if which("xfreerdp") {
+    } else if crate::process::which("xfreerdp").is_some() {
         "xfreerdp"
-    } else if which("wlfreerdp") {
+    } else if crate::process::which("wlfreerdp").is_some() {
         "wlfreerdp"
     } else {
         return Err(QvmError::FreeRdpNotFound);
@@ -100,12 +100,4 @@ pub fn run(base: &Path, name: String, app_cmd: String, args: Vec<String>) -> Res
     }
 
     Ok(())
-}
-
-fn which(name: &str) -> bool {
-    Command::new("which")
-        .arg(name)
-        .output()
-        .map(|o| o.status.success())
-        .unwrap_or(false)
 }

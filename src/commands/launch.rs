@@ -152,9 +152,9 @@ pub fn run(base: &Path, name: String, no_iso: bool, headless: bool) -> Result<()
 
     // Attempt viewer
     let viewer_url = format!("spice://localhost:{}", spice_port);
-    if which("remote-viewer") {
+    if crate::process::which("remote-viewer").is_some() {
         let _ = Command::new("remote-viewer").arg(&viewer_url).spawn();
-    } else if which("virt-viewer") {
+    } else if crate::process::which("virt-viewer").is_some() {
         let _ = Command::new("virt-viewer")
             .args(["--connect", &viewer_url])
             .spawn();
@@ -165,12 +165,4 @@ pub fn run(base: &Path, name: String, no_iso: bool, headless: bool) -> Result<()
     }
 
     Ok(())
-}
-
-fn which(name: &str) -> bool {
-    Command::new("which")
-        .arg(name)
-        .output()
-        .map(|o| o.status.success())
-        .unwrap_or(false)
 }

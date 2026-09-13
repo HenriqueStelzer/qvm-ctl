@@ -34,9 +34,10 @@ pub fn run(
     }
 
     // Verify qemu dependencies
-    which::which("qemu-system-x86_64")
-        .map_err(|_| QvmError::MissingDependency("qemu-system-x86_64".to_string()))?;
-    which::which("qemu-img").map_err(|_| QvmError::MissingDependency("qemu-img".to_string()))?;
+    crate::process::which("qemu-system-x86_64")
+        .ok_or_else(|| QvmError::MissingDependency("qemu-system-x86_64".to_string()))?;
+    crate::process::which("qemu-img")
+        .ok_or_else(|| QvmError::MissingDependency("qemu-img".to_string()))?;
 
     let ovmf = find_ovmf()?;
     let defaults = EnvDefaults::load();
@@ -110,20 +111,4 @@ fn chrono_now_iso() -> String {
         }
     }
     "unknown".to_string()
-}
-
-mod which {
-    use std::path::PathBuf;
-    use std::process::Command;
-
-    pub fn which(name: &str) -> Result<PathBuf, ()> {
-        let out = Command::new("which").arg(name).output();
-        match out {
-            Ok(o) if o.status.success() => {
-                let s = String::from_utf8_lossy(&o.stdout).trim().to_string();
-                Ok(PathBuf::from(s))
-            }
-            _ => Err(()),
-        }
-    }
 }
