@@ -379,49 +379,49 @@ cmd_launch(){
 
     local tpm_socket
     tpm_socket=$(vm_tpm_socket "$name")
-
+    
     local cmd=(
         qemu-system-x86_64
-
+    
         # Machine / acceleration
-        -machine q35,accel=kvm
+        -machine "q35,accel=kvm"
         -cpu host
         -smp "$VCPUS"
         -m "$RAM_MB"
-
+    
         # UEFI
         -drive "if=pflash,format=raw,readonly=on,file=$OVMF_CODE"
         -drive "if=pflash,format=raw,file=$OVMF_VARS"
-
+    
         # TPM 2.0
         -chardev "socket,id=chrtpm,path=$tpm_socket"
         -tpmdev "emulator,id=tpm0,chardev=chrtpm"
         -device "tpm-crb,tpmdev=tpm0"
-
+    
         # Graphics
-        -device virtio-gpu-pci
+        -device "virtio-gpu-pci"
         -spice "port=$port,disable-ticketing=on"
-
+    
         # SPICE agent
-        -device virtio-serial-pci
-        -chardev spicevmc,id=vdagent,name=vdagent
-        -device virtserialport,chardev=vdagent,name=com.redhat.spice.0
-
+        -device "virtio-serial-pci"
+        -chardev "spicevmc,id=vdagent,name=vdagent"
+        -device "virtserialport,chardev=vdagent,name=com.redhat.spice.0"
+    
         # Network
-        -nic user,model=virtio-net-pci
-
+        -nic "user,model=virtio-net-pci"
+    
         # System disk
         -drive "file=$DISK,if=virtio,format=qcow2,cache=none"
-
+    
         # USB tablet
-        -device usb-ehci
-        -device usb-tablet
-
+        -device "usb-ehci"
+        -device "usb-tablet"
+    
         # No local QEMU window
         -display none
-
+    
         # Boot order
-        -boot order=dc
+        -boot "order=dc"
     )
 
     # Windows installation ISO
