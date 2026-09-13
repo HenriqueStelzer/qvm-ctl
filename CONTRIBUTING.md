@@ -7,7 +7,7 @@ Thanks for your interest in contributing to `qvm-ctl`.
 `qvm-ctl` is intentionally minimal and objective. Its sole purpose is to manage QEMU/KVM virtual machine lifecycles cleanly from the terminal without libvirt or daemon bloat.
 
 To maintain simplicity:
-- We prefer simple shell functions and standard system tools over complex abstractions.
+- We prefer clean, robust system-level logic and standard system tools over complex abstractions.
 - We avoid feature bloat. If a proposed feature can be easily solved outside of `qvm` using standard UNIX tools, it probably doesn't belong in core.
 - Every addition must keep the tool fast, robust, and dependable.
 
@@ -42,15 +42,19 @@ When opening a bug report, please include:
 If you are fixing a bug or submitting an agreed-upon feature:
 
 1. **Keep it focused:** One bug fix or feature per pull request. Avoid mixing unrelated formatting changes or refactors with logic changes.
-2. **Follow existing style:** Write clean, readable Bash matching the style of `src/qvm-ctl.sh`.
-3. **Verify locally before pushing:** GitHub Actions runs our CI suite (ShellCheck and smoke tests) on every pull request. Running these checks locally ensures your PR is ready:
-   - ShellCheck:
+2. **Follow existing style:** Write idiomatic, clean Rust matching existing code conventions.
+3. **Verify locally before pushing:** GitHub Actions runs our CI suite (`cargo fmt`, `clippy`, and tests) on every pull request. Running these checks locally ensures your PR is ready:
+   - Formatting:
      ```bash
-     shellcheck src/qvm-ctl.sh
+     cargo fmt --check
      ```
-   - Smoke tests:
+   - Clippy lints:
      ```bash
-     bash test/smoke.sh
+     cargo clippy -- -D warnings
+     ```
+   - Tests:
+     ```bash
+     cargo test
      ```
 4. **Ensure CI passes:** All automated checks in GitHub Actions must pass before a PR can be merged.
 5. **Update documentation:** If your change modifies or introduces commands or configuration options, update the corresponding page under `docs/src/`.

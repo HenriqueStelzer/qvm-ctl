@@ -7,7 +7,7 @@
 [![CI](https://github.com/HenriqueStelzer/qvm-ctl/actions/workflows/ci.yml/badge.svg)](https://github.com/HenriqueStelzer/qvm-ctl/actions/workflows/ci.yml)
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 [![Release](https://img.shields.io/github/v/release/HenriqueStelzer/qvm-ctl?color=brightgreen)](https://github.com/HenriqueStelzer/qvm-ctl/releases)
-[![Docs](https://img.shields.io/badge/docs-mdBook-orange.svg)](docs/src/introduction.md)
+[![Docs](https://img.shields.io/badge/docs-mdBook-orange.svg)](https://henriquestelzer.github.io/qvm-ctl/)
 
 </div>
 
@@ -25,13 +25,13 @@ There are no background services to configure, no complex XML files, and no hype
 
 ```bash
 # Arch Linux
-sudo pacman -S qemu-full edk2-ovmf swtpm virt-viewer
+sudo pacman -S qemu-full edk2-ovmf swtpm virt-viewer freerdp
 
 # Debian / Ubuntu
-sudo apt install qemu-system-x86 qemu-utils ovmf swtpm swtpm-tools virt-viewer
+sudo apt install qemu-system-x86 qemu-utils ovmf swtpm swtpm-tools virt-viewer freerdp2-x11
 
 # Fedora
-sudo dnf install qemu-kvm qemu-img edk2-ovmf swtpm swtpm-tools virt-viewer
+sudo dnf install qemu-kvm qemu-img edk2-ovmf swtpm swtpm-tools virt-viewer freerdp
 ```
 
 ### 2. Install qvm
@@ -39,7 +39,8 @@ sudo dnf install qemu-kvm qemu-img edk2-ovmf swtpm swtpm-tools virt-viewer
 ```bash
 git clone https://github.com/HenriqueStelzer/qvm-ctl.git
 cd qvm-ctl
-sudo install -m755 src/qvm-ctl.sh /usr/local/bin/qvm
+cargo build --release
+sudo install -m755 target/release/qvm /usr/local/bin/qvm
 ```
 
 *(Arch Linux users can also run `makepkg -si` from the cloned repo).*
@@ -56,6 +57,9 @@ qvm launch win11
 # Future boots from disk (post-installation)
 qvm launch win11 --no-iso
 
+# Run an individual application seamlessly via FreeRDP RemoteApp
+qvm app win11 notepad.exe
+
 # Check status
 qvm list
 
@@ -70,9 +74,10 @@ qvm stop win11
 | Command | Usage | Description |
 | :--- | :--- | :--- |
 | `create` | `qvm create <name> <iso> [virtio.iso]` | Provision directory, disk image, and UEFI variables |
-| `launch` | `qvm launch <name> [--no-iso]` | Start VM process, TPM daemon, and open SPICE viewer |
+| `launch` | `qvm launch <name> [--no-iso] [--headless]` | Start VM process, TPM daemon, and open SPICE viewer |
+| `app` | `qvm app <name> <app_path> [args...]` | Run individual guest application via RemoteApp (FreeRDP) |
 | `stop` | `qvm stop <name>` | Graceful ACPI shutdown (SIGTERM with SIGKILL fallback) |
-| `list` | `qvm list` | List all VMs, runtime status, and SPICE ports |
+| `list` | `qvm list` | List all VMs, runtime status, SPICE ports, and RDP ports |
 | `disable` | `qvm disable <name>` | Stop VM and delete its directory and disk image |
 | `version` | `qvm version` | Display current installed version |
 
@@ -101,7 +106,9 @@ Existing VMs can also be customized at any time by editing `~/vms/<name>/vm.conf
 
 ## Documentation
 
-Full in-depth documentation is included in the `docs/` folder as an [mdBook](https://rust-lang.github.io/mdBook/):
+Online documentation is available at [henriquestelzer.github.io/qvm-ctl](https://henriquestelzer.github.io/qvm-ctl/).
+
+Full in-depth documentation is also included in the `docs/` folder as an [mdBook](https://rust-lang.github.io/mdBook/):
 
 ```bash
 cd docs
