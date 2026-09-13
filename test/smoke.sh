@@ -1,4 +1,4 @@
-!/usr/bin/env bash
+#!/usr/bin/env bash
 # Smoke tests for qvm-ctl
 # Runs without KVM/QEMU runtime — tests CLI logic only
 
@@ -54,7 +54,7 @@ check "help exits 0"              bash "$QVM" help
 check "--help exits 0"            bash "$QVM" --help
 check "-h exits 0"                bash "$QVM" -h
 check "version exits 0"           bash "$QVM" version
-check_output "version shows 1.0.0" "1.0.0" bash "$QVM" version
+check_output "version shows 1.1.0" "1.1.0" bash "$QVM" version
 
 # --- create ---
 echo ""
