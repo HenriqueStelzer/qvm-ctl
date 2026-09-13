@@ -2,13 +2,14 @@
 
 set -euo pipefail
 
-QVM_VERSION="1.1.0"
+QVM_VERSION="1.2.0"
 
 VM_DIR="${QVM_DIR:-$HOME/vms}"
 RAM_MB_DEFAULT="${QVM_RAM:-8192}"
 VCPUS_DEFAULT="${QVM_CPUS:-4}"
 DISK_SIZE_DEFAULT="${QVM_DISK:-40G}"
 SPICE_PORT_START=5900
+RDP_PORT_START=3389
 
 if [[ -t 1 ]] && [[ -z "${NO_COLOR:-}" ]]; then
     R='\033[0;31m'
@@ -107,6 +108,10 @@ vm_port_file(){
     echo "$(vm_dir "$1")/spice.port"
 }
 
+vm_rdp_port_file(){
+    echo "$(vm_dir "$1")/rdp.port"
+}
+
 vm_tpm_pid_file(){
     echo "$(vm_dir "$1")/swtpm.pid"
 }
@@ -156,6 +161,8 @@ cleanup_stale_files(){
     if [[ -f "$(vm_pid_file "$name")" ]] &&
        ! vm_is_running "$name"; then
         rm -f "$(vm_pid_file "$name")"
+        rm -f "$(vm_port_file "$name")"
+        rm -f "$(vm_rdp_port_file "$name")"
     fi
 
     if [[ -f "$(vm_tpm_pid_file "$name")" ]] &&
@@ -164,8 +171,8 @@ cleanup_stale_files(){
     fi
 }
 
-next_spice_port(){
-    local port=$SPICE_PORT_START
+next_free_port(){
+    local port="$1"
 
     while ss -Htln "sport = :$port" 2>/dev/null | grep -q .; do
         ((port++))
@@ -174,10 +181,21 @@ next_spice_port(){
     echo "$port"
 }
 
+next_spice_port(){
+    next_free_port "$SPICE_PORT_START"
+}
+
+next_rdp_port(){
+    next_free_port "$RDP_PORT_START"
+}
+
 load_vm(){
     local file="$1/vm.conf"
 
     [[ -f "$file" ]] || die "Missing vm.conf in $1"
+
+    RDP_USER=""
+    RDP_PASS=""
 
     local -A allowed=(
         [NAME]=1
@@ -189,6 +207,8 @@ load_vm(){
         [RAM_MB]=1
         [VCPUS]=1
         [CREATED]=1
+        [RDP_USER]=1
+        [RDP_PASS]=1
     )
 
     while IFS='=' read -r key val; do
@@ -339,13 +359,28 @@ EOF
 
 cmd_launch(){
     local name="${1:-}"
-    local flag="${2:-}"
+    shift || true
 
     [[ -n "$name" ]] ||
-        die "Usage: qvm launch <name> [--no-iso]"
+        die "Usage: qvm launch <name> [--no-iso] [--headless]"
 
-    [[ -z "$flag" || "$flag" == "--no-iso" ]] ||
-        die "Unknown option: '$flag'. Valid: --no-iso"
+    local attach_iso=1
+    local headless=0
+
+    while [[ $# -gt 0 ]]; do
+        case "$1" in
+            --no-iso)
+                attach_iso=0
+                ;;
+            --headless)
+                headless=1
+                ;;
+            *)
+                die "Unknown option: '$1'. Valid: --no-iso, --headless"
+                ;;
+        esac
+        shift
+    done
 
     local vmdir
     vmdir=$(vm_dir "$name")
@@ -365,10 +400,11 @@ cmd_launch(){
     cleanup_stale_files "$name"
 
     if vm_is_running "$name"; then
-        local port
+        local port rdp_p
         port=$(cat "$(vm_port_file "$name")" 2>/dev/null || echo "?")
+        rdp_p=$(cat "$(vm_rdp_port_file "$name")" 2>/dev/null || echo "?")
 
-        warn "Already running → spice://localhost:$port"
+        warn "Already running → spice://localhost:$port | rdp://localhost:$rdp_p"
         return
     fi
 
@@ -381,10 +417,12 @@ cmd_launch(){
     [[ -f "$OVMF_VARS" ]] ||
         die "OVMF_VARS not found at $OVMF_VARS (stored in vm.conf)"
 
-    local port
+    local port rdp_port
     port=$(next_spice_port)
-
     echo "$port" > "$(vm_port_file "$name")"
+
+    rdp_port=$(next_rdp_port)
+    echo "$rdp_port" > "$(vm_rdp_port_file "$name")"
 
     local log
     log=$(vm_log_file "$name")
@@ -424,8 +462,8 @@ cmd_launch(){
         -chardev "spicevmc,id=vdagent,name=vdagent"
         -device "virtserialport,chardev=vdagent,name=com.redhat.spice.0"
 
-        # Network
-        -nic "user,model=virtio-net-pci"
+        # Network with RDP forwarding
+        -nic "user,model=virtio-net-pci,hostfwd=tcp:127.0.0.1:$rdp_port-:3389"
 
         # System disk
         -drive "file=$DISK,if=virtio,format=qcow2,cache=none"
@@ -442,13 +480,13 @@ cmd_launch(){
     )
 
     # Windows installation ISO
-    if [[ "$flag" != "--no-iso" && -f "$ISO" ]]; then
+    if [[ "$attach_iso" -eq 1 && -f "$ISO" ]]; then
         cmd+=(
             -drive "file=$ISO,media=cdrom,readonly=on"
         )
 
         info "Windows ISO attached"
-    elif [[ "$flag" != "--no-iso" && ! -f "$ISO" ]]; then
+    elif [[ "$attach_iso" -eq 1 && ! -f "$ISO" ]]; then
         warn "ISO not found at $ISO"
         info "Booting from disk"
     else
@@ -480,11 +518,18 @@ cmd_launch(){
     if ! vm_is_running "$name"; then
         stop_tpm "$name"
         rm -f "$(vm_pid_file "$name")"
+        rm -f "$(vm_port_file "$name")"
+        rm -f "$(vm_rdp_port_file "$name")"
 
         die "QEMU exited immediately. Check: $log"
     fi
 
-    ok "Running → PID $pid | spice://localhost:$port"
+    ok "Running → PID $pid | spice://localhost:$port | rdp://localhost:$rdp_port"
+
+    if [[ "$headless" -eq 1 ]]; then
+        info "Running in headless mode (no SPICE viewer)"
+        return
+    fi
 
     if command -v remote-viewer &>/dev/null; then
         remote-viewer "spice://localhost:$port" &
@@ -506,6 +551,8 @@ cmd_stop(){
     if ! vm_is_running "$name"; then
         stop_tpm "$name"
         rm -f "$(vm_pid_file "$name")"
+        rm -f "$(vm_port_file "$name")"
+        rm -f "$(vm_rdp_port_file "$name")"
 
         die "VM '$name' is not running"
     fi
@@ -540,6 +587,8 @@ cmd_stop(){
     stop_tpm "$name"
 
     rm -f "$(vm_pid_file "$name")"
+    rm -f "$(vm_port_file "$name")"
+    rm -f "$(vm_rdp_port_file "$name")"
 
     ok "Stopped $name"
 }
@@ -563,11 +612,12 @@ cmd_list(){
         load_vm "$d"
 
         if vm_is_running "$NAME"; then
-            local port
+            local port rdp_p
             port=$(cat "$d/spice.port" 2>/dev/null || echo "?")
+            rdp_p=$(cat "$d/rdp.port" 2>/dev/null || echo "?")
 
             echo -e \
-                "  ${B}$NAME${Z}  ${G}running${Z}  spice://localhost:$port"
+                "  ${B}$NAME${Z}  ${G}running${Z}  spice://localhost:$port  rdp://localhost:$rdp_p"
         else
             echo -e \
                 "  ${B}$NAME${Z}  ${Y}stopped${Z}"
@@ -578,6 +628,91 @@ cmd_list(){
         warn "No VMs found."
 
     sep
+}
+
+cmd_app(){
+    local name="${1:-}"
+    local app_cmd="${2:-}"
+    shift 2 2>/dev/null || true
+    local app_args="$*"
+
+    [[ -n "$name" && -n "$app_cmd" ]] ||
+        die "Usage: qvm app <name> <app_path> [args...]"
+
+    local vmdir
+    vmdir=$(vm_dir "$name")
+
+    [[ -d "$vmdir" ]] ||
+        die "VM '$name' not found. Run: qvm list"
+
+    load_vm "$vmdir"
+
+    local just_launched=0
+    if ! vm_is_running "$name"; then
+        info "VM '$name' is stopped. Booting headless..."
+        cmd_launch "$name" --no-iso --headless
+        just_launched=1
+    fi
+
+    local rdp_port
+    rdp_port=$(cat "$(vm_rdp_port_file "$name")" 2>/dev/null || echo "")
+
+    [[ -n "$rdp_port" ]] ||
+        die "Could not determine RDP port for VM '$name'"
+
+    local rdp_client=""
+    if [[ -n "${WAYLAND_DISPLAY:-}" ]] && command -v wlfreerdp &>/dev/null; then
+        rdp_client="wlfreerdp"
+    elif command -v wlfreerdp &>/dev/null; then
+        rdp_client="wlfreerdp"
+    elif command -v xfreerdp &>/dev/null; then
+        rdp_client="xfreerdp"
+    else
+        die "FreeRDP not found. Install 'freerdp' (wlfreerdp or xfreerdp)."
+    fi
+
+    if [[ "$just_launched" -eq 1 ]]; then
+        info "Waiting for guest RDP service to become ready..."
+        local ready=0
+        for _ in {1..30}; do
+            if ! vm_is_running "$name"; then
+                die "VM '$name' stopped unexpectedly."
+            fi
+            if timeout 1 bash -c "</dev/tcp/127.0.0.1/$rdp_port" 2>/dev/null; then
+                ready=1
+                break
+            fi
+            sleep 1
+        done
+
+        if [[ "$ready" -eq 0 ]]; then
+            warn "Guest RDP port did not respond in 30s. Attempting to connect anyway..."
+        fi
+    fi
+
+    local user="${QVM_RDP_USER:-${RDP_USER:-$USER}}"
+    local pass="${QVM_RDP_PASS:-${RDP_PASS:-}}"
+
+    local rdp_cmd=(
+        "$rdp_client"
+        "/v:127.0.0.1:$rdp_port"
+        "/u:$user"
+        "/app:$app_cmd"
+        "/cert:ignore"
+        "+clipboard"
+        "+dynamic-resolution"
+    )
+
+    if [[ -n "$pass" ]]; then
+        rdp_cmd+=("/p:$pass")
+    fi
+
+    if [[ -n "$app_args" ]]; then
+        rdp_cmd+=("/app-cmd:$app_args")
+    fi
+
+    info "Launching '$app_cmd' on '$name' via $rdp_client (127.0.0.1:$rdp_port)..."
+    "${rdp_cmd[@]}"
 }
 
 cmd_disable(){
@@ -621,10 +756,11 @@ cmd_help(){
     echo -e "  ${C}qvm create  <name> <windows.iso> [virtio.iso]${Z}"
     echo -e "                              create a new VM"
 
-    echo -e "  ${C}qvm launch  <name>${Z}      boot with installation ISO"
+    echo -e "  ${C}qvm launch  <name> [--no-iso] [--headless]${Z}"
+    echo -e "                              boot VM (optionally without ISO or SPICE viewer)"
 
-    echo -e "  ${C}qvm launch  <name> --no-iso${Z}"
-    echo -e "                              boot from disk"
+    echo -e "  ${C}qvm app     <name> <app_path> [args...]${Z}"
+    echo -e "                              launch application via FreeRDP RemoteApp"
 
     echo -e "  ${C}qvm stop    <name>${Z}      gracefully stop VM"
 
@@ -638,10 +774,12 @@ cmd_help(){
 
     echo -e "  Environment overrides:"
 
-    echo -e "    QVM_DIR   VM storage directory  (default: ~/vms)"
-    echo -e "    QVM_RAM   RAM in MB             (default: 8192)"
-    echo -e "    QVM_CPUS  vCPU count            (default: 4)"
-    echo -e "    QVM_DISK  Disk size             (default: 40G)"
+    echo -e "    QVM_DIR       VM storage directory      (default: ~/vms)"
+    echo -e "    QVM_RAM       RAM in MB                 (default: 8192)"
+    echo -e "    QVM_CPUS      vCPU count                (default: 4)"
+    echo -e "    QVM_DISK      Disk size                 (default: 40G)"
+    echo -e "    QVM_RDP_USER  RemoteApp RDP username    (default: \$USER or vm.conf)"
+    echo -e "    QVM_RDP_PASS  RemoteApp RDP password    (default: prompt or vm.conf)"
 
     sep
 }
@@ -652,7 +790,13 @@ case "${1:-}" in
         ;;
 
     launch)
-        cmd_launch "${2:-}" "${3:-}"
+        shift
+        cmd_launch "$@"
+        ;;
+
+    app)
+        shift
+        cmd_app "$@"
         ;;
 
     stop)
