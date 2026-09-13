@@ -1,0 +1,15 @@
+[book]
+authors = ["Henrique Stelzer"]
+description = "Documentation for qvm-ctl, a lightweight QEMU/KVM VM manager"
+language = "en"
+src = "src"
+title = "qvm-ctl Documentation"
+
+[build]
+build-dir = "book"
+create-missing = false
+
+[output.html]
+git-repository-url = "https://github.com/HenriqueStelzer/qvm-ctl"
+edit-url-template = "https://github.com/HenriqueStelzer/qvm-ctl/edit/main/docs/{path}"
+site-url = "/qvm-ctl/"
