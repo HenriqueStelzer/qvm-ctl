@@ -2,22 +2,22 @@
 
 ## 1. Install Dependencies
 
-Ensure virtualization is supported (`ls -l /dev/kvm`). Then install dependencies for your distribution:
+Ensure virtualization is supported (`ls -l /dev/kvm`). Then install dependencies for your distribution (including the Rust toolchain to compile from source):
 
 ### Arch Linux
 ```bash
-sudo pacman -S qemu-full edk2-ovmf swtpm virt-viewer
+sudo pacman -S qemu-full edk2-ovmf swtpm virt-viewer freerdp rust
 ```
 
 ### Debian / Ubuntu
 ```bash
 sudo apt update
-sudo apt install qemu-system-x86 qemu-utils ovmf swtpm swtpm-tools virt-viewer
+sudo apt install qemu-system-x86 qemu-utils ovmf swtpm swtpm-tools virt-viewer freerdp2-x11 cargo rustc
 ```
 
 ### Fedora
 ```bash
-sudo dnf install qemu-kvm qemu-img edk2-ovmf swtpm swtpm-tools virt-viewer
+sudo dnf install qemu-kvm qemu-img edk2-ovmf swtpm swtpm-tools virt-viewer freerdp cargo rust
 ```
 
 > **Note:** If you get permission errors accessing `/dev/kvm`, add your user to the `kvm` group:
@@ -27,12 +27,21 @@ sudo dnf install qemu-kvm qemu-img edk2-ovmf swtpm swtpm-tools virt-viewer
 
 ---
 
-## 2. Install qvm
+## 2. Build & Install qvm
+
+Clone the repository and build the release binary with `cargo`:
 
 ```bash
 git clone https://github.com/HenriqueStelzer/qvm-ctl.git
 cd qvm-ctl
-sudo install -m755 src/qvm-ctl.sh /usr/local/bin/qvm
+cargo build --release
+sudo install -m755 target/release/qvm /usr/local/bin/qvm
+```
+
+Alternatively, install directly using `cargo install`:
+
+```bash
+cargo install --path .
 ```
 
 Or on Arch Linux using the included PKGBUILD:
@@ -46,5 +55,5 @@ makepkg -si
 
 ```bash
 qvm version
-# Output: qvm 1.1.0
+# Output: qvm 1.2.0
 ```

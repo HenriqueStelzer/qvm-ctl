@@ -1,12 +1,21 @@
 # Introduction
 
-**`qvm-ctl`** (installed as `qvm`) is a lightweight CLI tool to manage repeatable QEMU/KVM virtual machine lifecycles without libvirt.
+**`qvm-ctl`** (installed as `qvm`) is a fast, lightweight CLI tool written in Rust to manage repeatable QEMU/KVM virtual machine lifecycles without libvirt.
 
 ---
 
 ## What It Does
 
 `qvm-ctl` is a command-line tool that lets you create, run, and manage QEMU/KVM virtual machines with simple commands instead of dealing with complex hypervisors. It automatically configures UEFI boot, TPM 2.0 emulation, virtual disks, and graphical displays so modern Linux and Windows installations work immediately out of the box. Each virtual machine is kept self-contained in its own folder on your computer, making your VMs easy to locate, inspect, and delete.
+
+---
+
+## Built with Rust
+
+Written from the ground up in idiomatic Rust, `qvm-ctl` emphasizes speed, safety, and operational reliability:
+- **Zero Runtime Overhead:** Compiled into a single binary with no interpreter dependencies or background hypervisor daemons.
+- **Reliable Process Lifecycle:** Direct OS signal dispatch and process supervision via native system libraries.
+- **Deterministic Port & Concurrency Management:** Built-in TCP socket probing and cross-process file locking guarantee conflict-free multi-VM execution.
 
 ---
 

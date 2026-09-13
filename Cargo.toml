@@ -5,6 +5,7 @@ edition = "2021"
 license = "MIT"
 description = "Simple, lightweight QEMU/KVM virtual machines from your terminal"
 repository = "https://github.com/HenriqueStelzer/qvm-ctl"
+documentation = "https://henriquestelzer.github.io/qvm-ctl/"
 readme = "README.md"
 
 [[bin]]

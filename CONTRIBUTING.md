@@ -4,7 +4,7 @@ Thanks for your interest in contributing to `qvm-ctl`.
 
 ## Project Philosophy
 
-`qvm-ctl` is intentionally minimal and objective. Its sole purpose is to manage QEMU/KVM virtual machine lifecycles cleanly from the terminal without libvirt or daemon bloat.
+`qvm-ctl` is a minimal, high-performance tool written in Rust. Its sole purpose is to manage QEMU/KVM virtual machine lifecycles cleanly from the terminal without libvirt or daemon bloat.
 
 To maintain simplicity:
 - We prefer clean, robust system-level logic and standard system tools over complex abstractions.
@@ -57,4 +57,4 @@ If you are fixing a bug or submitting an agreed-upon feature:
      cargo test
      ```
 4. **Ensure CI passes:** All automated checks in GitHub Actions must pass before a PR can be merged.
-5. **Update documentation:** If your change modifies or introduces commands or configuration options, update the corresponding page under `docs/src/`.
+5. **Update documentation:** If your change modifies or introduces commands or configuration options, update the corresponding page under `docs/src/` (published live at [henriquestelzer.github.io/qvm-ctl](https://henriquestelzer.github.io/qvm-ctl/)).

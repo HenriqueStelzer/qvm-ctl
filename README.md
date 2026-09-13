@@ -2,9 +2,10 @@
 
 # qvm-ctl
 
-**Simple, lightweight QEMU/KVM virtual machines from your terminal.**
+**Fast, lightweight QEMU/KVM virtual machine manager written in Rust.**
 
 [![CI](https://github.com/HenriqueStelzer/qvm-ctl/actions/workflows/ci.yml/badge.svg)](https://github.com/HenriqueStelzer/qvm-ctl/actions/workflows/ci.yml)
+[![Rust](https://img.shields.io/badge/Language-Rust-orange.svg?logo=rust)](https://www.rust-lang.org)
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 [![Release](https://img.shields.io/github/v/release/HenriqueStelzer/qvm-ctl?color=brightgreen)](https://github.com/HenriqueStelzer/qvm-ctl/releases)
 [![Docs](https://img.shields.io/badge/docs-mdBook-orange.svg)](https://henriquestelzer.github.io/qvm-ctl/)
@@ -13,9 +14,11 @@
 
 ---
 
-`qvm-ctl` (installed as `qvm`) is a command-line tool that lets you create, run, and manage virtual machines with single commands. You provide an ISO, and it handles everything required to get a modern OS up and running: virtual disk creation, UEFI firmware, TPM 2.0 emulation, and graphical display.
+`qvm-ctl` (installed as `qvm`) is a fast, lightweight command-line tool written in Rust that lets you create, run, and manage virtual machines with single commands. You provide an ISO, and it handles everything required to get a modern OS up and running: virtual disk creation, UEFI firmware, TPM 2.0 emulation, and graphical display.
 
 There are no background services to configure, no complex XML files, and no hypervisor daemons running when your VMs are turned off. Every virtual machine lives in its own directory on your computer, making your environments simple to inspect, move, or delete.
+
+📖 **Documentation:** Read the complete guide, command reference, and architecture details at [henriquestelzer.github.io/qvm-ctl](https://henriquestelzer.github.io/qvm-ctl/).
 
 ---
 
@@ -25,13 +28,13 @@ There are no background services to configure, no complex XML files, and no hype
 
 ```bash
 # Arch Linux
-sudo pacman -S qemu-full edk2-ovmf swtpm virt-viewer freerdp
+sudo pacman -S qemu-full edk2-ovmf swtpm virt-viewer freerdp rust
 
 # Debian / Ubuntu
-sudo apt install qemu-system-x86 qemu-utils ovmf swtpm swtpm-tools virt-viewer freerdp2-x11
+sudo apt install qemu-system-x86 qemu-utils ovmf swtpm swtpm-tools virt-viewer freerdp2-x11 cargo rustc
 
 # Fedora
-sudo dnf install qemu-kvm qemu-img edk2-ovmf swtpm swtpm-tools virt-viewer freerdp
+sudo dnf install qemu-kvm qemu-img edk2-ovmf swtpm swtpm-tools virt-viewer freerdp cargo rust
 ```
 
 ### 2. Install qvm

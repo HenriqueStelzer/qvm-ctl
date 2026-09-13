@@ -1,6 +1,21 @@
 # Architecture & Internals
 
-`qvm-ctl` manages virtual machines as standalone background processes without system daemons.
+`qvm-ctl` is implemented in Rust as a compiled native binary. It manages virtual machines as standalone background processes without hypervisor daemons or runtime interpreter dependencies.
+
+---
+
+## Rust Module Design
+
+The codebase is organized into clean, single-responsibility modules:
+
+- **`cli`:** Command-line argument parsing and validation powered by [`clap`](https://crates.io/crates/clap).
+- **`qemu`:** Pure, testable QEMU command builder mapping VM configuration to Q35/KVM parameters.
+- **`port`:** Subprocess-free dynamic TCP port allocation using `std::net::TcpListener` (starting at port 5900 for SPICE and 3389 for RDP).
+- **`process`:** Subprocess management, PID file tracking, and graceful signal dispatch via [`nix`](https://crates.io/crates/nix).
+- **`ovmf`:** Multi-distribution discovery for UEFI `OVMF_CODE` and `OVMF_VARS` firmware templates across Arch, Debian/Ubuntu, and Fedora.
+- **`tpm`:** Lifecycle supervisor for `swtpm` software TPM 2.0 daemon and Unix control sockets.
+- **`config`:** Strongly-typed parser and serializer for `vm.conf` key-value pairs and environment overrides.
+- **`error`:** Comprehensive error domain modeled with [`thiserror`](https://crates.io/crates/thiserror) and [`anyhow`](https://crates.io/crates/anyhow).
 
 ---
 
@@ -15,6 +30,7 @@ Each VM is self-contained in `~/vms/<name>/`:
 ├── ovmf-vars.fd     # Independent writable UEFI NVRAM
 ├── qemu.log         # Process stdout & stderr log
 ├── spice.port       # Currently allocated SPICE port
+├── rdp.port         # Currently allocated RDP port
 ├── <name>.pid       # QEMU process ID
 ├── swtpm.pid        # swtpm process ID
 ├── swtpm.sock       # Unix control socket for swtpm
@@ -33,11 +49,11 @@ When `qvm launch` runs, it executes `qemu-system-x86_64` with:
 - **Graphics:** `virtio-gpu-pci` with SPICE server and `vdagent` for clipboard synchronization and auto-resizing.
 - **Input:** USB tablet pointer device (`-device usb-tablet`) for lag-free cursor tracking.
 - **Storage:** Paravirtualized VirtIO block device (`-drive file=$DISK,if=virtio,format=qcow2`).
-- **Networking:** User-mode networking with VirtIO (`-nic user,model=virtio-net-pci`).
+- **Networking:** User-mode networking with VirtIO (`-nic user,model=virtio-net-pci`) with host port-forwarding for RDP.
 
 ---
 
 ## Port & Concurrency Management
 
-- **Port Allocation:** Dynamic scanning with `ss` starting at port 5900 ensures multiple VMs run concurrently without collisions.
-- **Launch Locking:** Uses `flock` on `.launch.lock` to prevent accidental dual-execution of the same VM.
+- **Port Allocation:** Dynamic scanning with native `std::net::TcpListener::bind` eliminates external subprocess overhead (such as `ss`) while guaranteeing no port collisions.
+- **Launch Locking:** Uses cross-process advisory locking (`fd-lock`) on `.launch.lock` to prevent accidental concurrent execution of the same VM.
