@@ -9,7 +9,8 @@ Quick summary of all `qvm` subcommands.
 | Command | Usage | Description |
 | :--- | :--- | :--- |
 | [`create`](create.md) | `qvm create <name> <iso> [driver_iso]` | Provision a new VM directory, disk, and configuration |
-| [`launch`](launch.md) | `qvm launch <name> [--no-iso]` | Start VM with or without installation media |
+| [`launch`](launch.md) | `qvm launch <name> [--no-iso] [--headless]` | Start VM with or without installation media |
+| [`app`](app.md) | `qvm app <name> <app_path> [args...]` | Run individual guest app via FreeRDP RemoteApp |
 | [`stop`](stop.md) | `qvm stop <name>` | Gracefully shut down a running VM (ACPI SIGTERM) |
 | [`list`](list.md) | `qvm list` | Display all VMs and their running/stopped status |
 | [`disable`](disable.md) | `qvm disable <name>` | Stop and permanently delete a VM |
