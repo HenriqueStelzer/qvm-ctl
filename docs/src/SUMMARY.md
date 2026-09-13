@@ -9,6 +9,7 @@
 - [Command Overview](commands/index.md)
 - [qvm create](commands/create.md)
 - [qvm launch](commands/launch.md)
+- [qvm app](commands/app.md)
 - [qvm stop](commands/stop.md)
 - [qvm list](commands/list.md)
 - [qvm disable](commands/disable.md)
