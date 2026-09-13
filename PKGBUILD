@@ -25,7 +25,7 @@ check() {
 
 package() {
     cd "$pkgname-$pkgver"
-    install -Dm755 qvm-ctl.sh "$pkgdir/usr/bin/qvm"
+    install -Dm755 src/qvm-ctl.sh "$pkgdir/usr/bin/qvm"
     install -Dm644 LICENSE "$pkgdir/usr/share/licenses/$pkgname/LICENSE"
     install -Dm644 README.md "$pkgdir/usr/share/doc/$pkgname/README.md"
 }

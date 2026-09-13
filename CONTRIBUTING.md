@@ -42,11 +42,11 @@ When opening a bug report, please include:
 If you are fixing a bug or submitting an agreed-upon feature:
 
 1. **Keep it focused:** One bug fix or feature per pull request. Avoid mixing unrelated formatting changes or refactors with logic changes.
-2. **Follow existing style:** Write clean, readable Bash matching the style of `qvm-ctl.sh`.
+2. **Follow existing style:** Write clean, readable Bash matching the style of `src/qvm-ctl.sh`.
 3. **Verify locally before pushing:** GitHub Actions runs our CI suite (ShellCheck and smoke tests) on every pull request. Running these checks locally ensures your PR is ready:
    - ShellCheck:
      ```bash
-     shellcheck qvm-ctl.sh
+     shellcheck src/qvm-ctl.sh
      ```
    - Smoke tests:
      ```bash

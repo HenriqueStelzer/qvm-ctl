@@ -32,7 +32,7 @@ sudo dnf install qemu-kvm qemu-img edk2-ovmf swtpm swtpm-tools virt-viewer
 ```bash
 git clone https://github.com/HenriqueStelzer/qvm-ctl.git
 cd qvm-ctl
-sudo install -m755 qvm-ctl.sh /usr/local/bin/qvm
+sudo install -m755 src/qvm-ctl.sh /usr/local/bin/qvm
 ```
 
 Or on Arch Linux using the included PKGBUILD:

@@ -16,5 +16,5 @@ jobs:
       - name: Create release
         uses: softprops/action-gh-release@v2
         with:
-          files: qvm-ctl.sh
+          files: src/qvm-ctl.sh
           generate_release_notes: true

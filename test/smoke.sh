@@ -4,7 +4,7 @@
 
 set -uo pipefail
 
-QVM="./qvm-ctl.sh"
+QVM="./src/qvm-ctl.sh"
 export QVM_DIR
 QVM_DIR=$(mktemp -d)
 

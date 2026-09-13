@@ -1,0 +1,5 @@
+# mdBook build output
+docs/book/
+
+# Temporary and test artifacts
+*.log
