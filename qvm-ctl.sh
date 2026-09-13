@@ -34,6 +34,9 @@ find_ovmf(){
         /usr/share/edk2/x64/OVMF_CODE.secboot.fd
         /usr/share/edk2/x64/OVMF_CODE_4M.fd
         /usr/share/edk2/x64/OVMF_CODE.fd
+        /usr/share/OVMF/OVMF_CODE_4M.secboot.fd
+        /usr/share/OVMF/OVMF_CODE_4M.fd
+        /usr/share/OVMF/OVMF_CODE_4M.ms.fd
         /usr/share/OVMF/x64/OVMF_CODE.secboot.4m.fd
         /usr/share/OVMF/x64/OVMF_CODE.4m.fd
         /usr/share/OVMF/OVMF_CODE.secboot.fd
@@ -47,6 +50,8 @@ find_ovmf(){
         /usr/share/edk2/x64/OVMF_VARS.ms.fd
         /usr/share/edk2/x64/OVMF_VARS_4M.fd
         /usr/share/edk2/x64/OVMF_VARS.fd
+        /usr/share/OVMF/OVMF_VARS_4M.ms.fd
+        /usr/share/OVMF/OVMF_VARS_4M.fd
         /usr/share/OVMF/x64/OVMF_VARS.ms.4m.fd
         /usr/share/OVMF/x64/OVMF_VARS.4m.fd
         /usr/share/OVMF/OVMF_VARS.ms.fd
