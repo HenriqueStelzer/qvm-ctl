@@ -14,6 +14,8 @@ jobs:
       - uses: dtolnay/rust-toolchain@stable
         with:
           components: clippy, rustfmt
+      - name: Install system dependencies
+        run: sudo apt-get update && sudo apt-get install -y qemu-system-x86 qemu-utils ovmf swtpm
       - run: cargo fmt --check
       - run: cargo clippy -- -D warnings
       - run: cargo test
@@ -23,6 +25,6 @@ jobs:
     container: archlinux:latest
     steps:
       - uses: actions/checkout@v4
-      - run: pacman -Syu --noconfirm rust qemu-system-x86 qemu-img edk2-ovmf swtpm procps-ng
+      - run: pacman -Syu --noconfirm rust qemu-system-x86 qemu-img edk2-ovmf swtpm procps-ng which
       - run: cargo build --release
       - run: cargo test
